@@ -1,0 +1,47 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.metadata = void 0;
+const query_1 = require("@b/utils/query");
+exports.metadata = {
+    summary: "Updates a specific Mailwizard Campaign",
+    operationId: "updateMailwizardCampaign",
+    tags: ["Admin", "Mailwizard Campaigns"],
+    parameters: [
+        {
+            name: "id",
+            in: "path",
+            description: "ID of the Mailwizard Campaign to update",
+            required: true,
+            schema: {
+                type: "string",
+            },
+        },
+    ],
+    requestBody: {
+        description: "New data for the Mailwizard Campaign",
+        content: {
+            "application/json": {
+                schema: {
+                    type: "object",
+                    properties: {
+                        targets: {
+                            type: "string",
+                            description: "Email targets for the campaign",
+                        },
+                    },
+                },
+            },
+        },
+    },
+    responses: (0, query_1.updateRecordResponses)("Mailwizard Campaign"),
+    requiresAuth: true,
+    permission: "Access Mailwizard Campaign Management",
+};
+exports.default = async (data) => {
+    const { body, params } = data;
+    const { id } = params;
+    const { targets } = body;
+    return await (0, query_1.updateRecord)("mailwizardCampaign", id, {
+        targets,
+    });
+};

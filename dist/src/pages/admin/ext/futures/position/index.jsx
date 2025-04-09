@@ -1,0 +1,105 @@
+"use client";
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.permission = void 0;
+const react_1 = __importDefault(require("react"));
+const Default_1 = __importDefault(require("@/layouts/Default"));
+const datatable_1 = require("@/components/elements/base/datatable");
+const next_i18next_1 = require("next-i18next");
+const date_fns_1 = require("date-fns");
+const api = "/api/admin/ext/futures/position";
+const columnConfig = [
+    {
+        field: "createdAt",
+        label: "Date",
+        type: "date",
+        sortable: true,
+        filterable: false,
+        getValue: (row) => (0, date_fns_1.formatDate)(new Date(row.createdAt), "yyyy-MM-dd HH:mm"),
+    },
+    {
+        field: "symbol",
+        label: "Symbol",
+        type: "text",
+        sortable: false,
+        filterable: false,
+    },
+    {
+        field: "side",
+        label: "Side",
+        type: "text",
+        sortable: false,
+        filterable: false,
+        options: [
+            { value: "BUY", label: "Buy" },
+            { value: "SELL", label: "Sell" },
+        ],
+        placeholder: "Select Side",
+    },
+    {
+        field: "entryPrice",
+        label: "Entry Price",
+        type: "number",
+        sortable: false,
+        filterable: false,
+    },
+    {
+        field: "amount",
+        label: "Amount",
+        type: "number",
+        sortable: false,
+        filterable: false,
+    },
+    {
+        field: "leverage",
+        label: "Leverage",
+        type: "number",
+        sortable: false,
+        filterable: false,
+    },
+    {
+        field: "unrealizedPnl",
+        label: "Unrealized PnL",
+        type: "number",
+        sortable: false,
+        filterable: false,
+    },
+    {
+        field: "stopLossPrice",
+        label: "Stop Loss Price",
+        type: "number",
+        sortable: false,
+        filterable: false,
+    },
+    {
+        field: "takeProfitPrice",
+        label: "Take Profit Price",
+        type: "number",
+        sortable: false,
+        filterable: false,
+    },
+    {
+        field: "status",
+        label: "Status",
+        type: "text",
+        sortable: false,
+        filterable: false,
+        options: [
+            { value: "OPEN", label: "Open" },
+            { value: "CLOSED", label: "Closed" },
+            { value: "CANCELLED", label: "Cancelled" },
+        ],
+        placeholder: "Select status",
+    },
+];
+const FuturesPositions = () => {
+    const { t } = (0, next_i18next_1.useTranslation)();
+    return (<Default_1.default title={t("Futures Positions Management")} color="muted">
+      <datatable_1.DataTable title={t("Futures Positions")} endpoint={api} columnConfig={columnConfig} isCrud={false} canCreate={false} hasAnalytics={false} canEdit={false} canDelete={false} canView={false}/>
+    </Default_1.default>);
+};
+exports.default = FuturesPositions;
+exports.permission = "Access Futures Position Management";

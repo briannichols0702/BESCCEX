@@ -1,0 +1,49 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.metadata = void 0;
+const query_1 = require("@b/utils/query");
+const utils_1 = require("../utils");
+const db_1 = require("@b/db");
+exports.metadata = {
+    summary: "Retrieves detailed information of a specific ICO phase by ID",
+    operationId: "getIcoPhaseById",
+    tags: ["Admin", "ICO Phases"],
+    parameters: [
+        {
+            index: 0,
+            name: "id",
+            in: "path",
+            required: true,
+            description: "ID of the ICO phase to retrieve",
+            schema: { type: "string" },
+        },
+    ],
+    responses: {
+        200: {
+            description: "ICO phase details",
+            content: {
+                "application/json": {
+                    schema: {
+                        type: "object",
+                        properties: utils_1.baseIcoPhaseSchema, // Define this schema in your utils if it's not already defined
+                    },
+                },
+            },
+        },
+        401: query_1.unauthorizedResponse,
+        404: (0, query_1.notFoundMetadataResponse)("ICO Phase"),
+        500: query_1.serverErrorResponse,
+    },
+    permission: "Access ICO Phase Management",
+    requiresAuth: true,
+};
+exports.default = async (data) => {
+    const { params } = data;
+    return await (0, query_1.getRecord)("icoPhase", params.id, [
+        {
+            model: db_1.models.icoToken,
+            as: "token",
+            attributes: ["name", "currency", "chain", "image"],
+        },
+    ]);
+};

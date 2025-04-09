@@ -1,0 +1,106 @@
+"use strict";
+// /api/admin/ecosystem/custodialWallets/transferNative.post.ts
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.metadata = void 0;
+const db_1 = require("@b/db");
+const custodialWallet_1 = require("@b/utils/eco/custodialWallet");
+const provider_1 = require("@b/utils/eco/provider");
+const ethers_1 = require("ethers");
+const encrypt_1 = require("@b/utils/encrypt");
+const query_1 = require("@b/utils/query");
+exports.metadata = {
+    summary: "Transfer native tokens from Ecosystem Custodial Wallet",
+    operationId: "transferNativeEcosystemCustodialWallet",
+    tags: ["Admin", "Ecosystem Custodial Wallets"],
+    parameters: [
+        {
+            index: 0,
+            name: "id",
+            in: "path",
+            description: "Ecosystem Custodial Wallet ID",
+            required: true,
+            schema: {
+                type: "string",
+            },
+        },
+    ],
+    requestBody: {
+        required: true,
+        content: {
+            "application/json": {
+                schema: {
+                    type: "object",
+                    properties: {
+                        recipient: {
+                            type: "string",
+                            description: "Recipient address",
+                        },
+                        amount: {
+                            type: "string",
+                            description: "Amount to transfer (in wei)",
+                        },
+                    },
+                    required: ["id", "recipient", "amount"],
+                },
+            },
+        },
+    },
+    responses: {
+        200: {
+            description: "Native tokens transferred successfully",
+            content: {
+                "application/json": {
+                    schema: {
+                        type: "object",
+                        properties: {
+                            transactionHash: {
+                                type: "string",
+                                description: "Transaction hash",
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        401: query_1.unauthorizedResponse,
+        404: (0, query_1.notFoundMetadataResponse)("Custodial Wallet"),
+        500: query_1.serverErrorResponse,
+    },
+    requiresAuth: true,
+    permission: "Access Ecosystem Custodial Wallet Management",
+};
+exports.default = async (data) => {
+    const { user, body, params } = data;
+    if (!user) {
+        throw new Error("Authentication required to transfer native tokens");
+    }
+    const { id } = params;
+    const { recipient, amount } = body;
+    try {
+        const custodialWallet = await db_1.models.ecosystemCustodialWallet.findByPk(id);
+        if (!custodialWallet) {
+            throw new Error(`Custodial wallet not found`);
+        }
+        const masterWallet = await db_1.models.ecosystemMasterWallet.findByPk(custodialWallet.masterWalletId);
+        if (!masterWallet) {
+            throw new Error(`Master wallet not found`);
+        }
+        if (!masterWallet.data) {
+            throw new Error(`Master wallet data not found`);
+        }
+        const decryptedData = JSON.parse((0, encrypt_1.decrypt)(masterWallet.data));
+        const { privateKey } = decryptedData;
+        const provider = await (0, provider_1.getProvider)(custodialWallet.chain);
+        const signer = new ethers_1.ethers.Wallet(privateKey).connect(provider);
+        const contract = await (0, custodialWallet_1.getCustodialWalletContract)(custodialWallet.address, signer);
+        const transaction = await contract.transferNative(recipient, amount);
+        await transaction.wait();
+        return {
+            message: "Native tokens transferred successfully",
+        };
+    }
+    catch (error) {
+        console.error(`Failed to transfer native tokens: ${error.message}`);
+        throw new Error(error.message);
+    }
+};
